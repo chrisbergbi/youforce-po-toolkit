@@ -1,81 +1,76 @@
 ---
 description: >
-  Check for updates to the Youforce PO Toolkit plugin and install the latest version.
+  Check for updates to the Youforce PO Toolkit plugin and install the latest version with one click.
   Use this skill when the user says "check for updates", "is there a new version", "update de plugin",
   "nieuwe versie beschikbaar?", or "plugin updaten".
 ---
 
 # Check for updates — Youforce PO Toolkit
 
-**Geïnstalleerde versie:** `0.5.0`
+**Geïnstalleerde versie:** `0.6.0`
 **GitHub repo:** `chrisbergbi/youforce-po-toolkit`
-
-Maak een artifact dat via browser-side `fetch()` de nieuwste GitHub-release ophaalt en de gebruiker
-een downloadknop biedt als er een update beschikbaar is.
-
-> De bash-sandbox kan GitHub niet bereiken (proxy blokkeert het). Een artifact draait in
-> Electron's webview, die wél directe internettoegang heeft.
 
 ---
 
 ## Stappen
 
-### 1. Stel versies in
-- `installed_version` = `0.5.0` (hardcoded in deze skill — wordt bijgewerkt bij elke release)
+### 1. Haal de laatste versie op via WebSearch
 
-### 2. Laad de artifact-tool
-Laad `mcp__cowork__create_artifact` via ToolSearch.
-
-### 3. Maak het artifact aan
-
-Bouw een self-contained HTML artifact met deze logica:
-
+Gebruik `WebSearch` (laad via ToolSearch indien nodig) met query:
 ```
-const INSTALLED = "0.5.0";
-const API_URL = "https://api.github.com/repos/chrisbergbi/youforce-po-toolkit/releases/latest";
-
-fetch(API_URL)
-  → parse tag_name → strip "v" → latest_version
-  → parse assets[] → zoek asset waar name eindigt op ".plugin" → browser_download_url
-
-Als latest_version == INSTALLED:
-  Toon groen vinkje: "Je hebt de laatste versie (v{INSTALLED})."
-
-Als latest_version > INSTALLED:
-  Toon: "Update beschikbaar: v{latest_version} (huidig: v{INSTALLED})"
-  Toon downloadknop: <a href="{browser_download_url}" download>Download v{latest_version}</a>
-  Toon instructie onder de knop:
-    "Na het downloaden: open Cowork-instellingen → Plugins → Install plugin
-     en selecteer het gedownloade .plugin bestand. Een herstart kan nodig zijn."
-
-Bij fout (netwerk / rate-limit):
-  Toon foutmelding met "Probeer opnieuw"-knop die fetch() herhaalt.
-  Bij rate-limit (HTTP 403/429): vermeld expliciet dat GitHub tijdelijk beperkt is.
+github chrisbergbi youforce-po-toolkit releases latest
 ```
 
-**Artifact-richtlijnen:**
-- Toon een laadspinner terwijl de API wordt bevraagd
-- Strakke, minimalistische opmaak passend bij Cowork
-- Geen externe CDN-links — alles inline
-- Gebruik CSS variables voor kleuren zodat het werkt in dark mode
+Extraheer het versienummer uit de resultaten (formaat: `v0.x.x` of `0.x.x`).
+Sla op als `latest_version` (zonder `v`-prefix).
 
-### 4. Chat-samenvatting
-Na het aanmaken van het artifact, geef een korte samenvatting:
-- Update beschikbaar: "Er is een nieuwe versie: **v{latest_version}**. Download via het venster hierboven en installeer via Plugins → Install plugin."
-- Up-to-date: "Je plugin is up-to-date (v{installed_version})."
+### 2. Vergelijk met geïnstalleerde versie
 
----
+- `installed_version` = `0.6.0` (hardcoded — wordt bijgewerkt bij elke release)
+- Als `latest_version` == `installed_version`: vertel de gebruiker dat de plugin up-to-date is. Stop.
+- Als `latest_version` > `installed_version`: ga naar stap 3.
 
-## Fallback: als het artifact toch geen GitHub-toegang heeft
+### 3. Download en presenteer de nieuwe versie
 
-1. Gebruik `WebSearch` met query: `github chrisbergbi youforce-po-toolkit releases`
-2. Extraheer het laatste versienummer
-3. Vergelijk met `0.5.0`
-4. Als update: geef de gebruiker deze link:
-   `https://github.com/chrisbergbi/youforce-po-toolkit/releases/latest`
+Gebruik `mcp__workspace__bash` om:
+1. De repo te clonen (publiek, geen token nodig):
+```bash
+cd /tmp && rm -rf youforce-po-toolkit-update
+git clone https://github.com/chrisbergbi/youforce-po-toolkit.git youforce-po-toolkit-update
+```
+
+2. Het `.plugin` bestand te bouwen:
+```bash
+cd /tmp
+zip -r /tmp/youforce-po-toolkit.plugin youforce-po-toolkit-update/ \
+  -x "*.DS_Store" -x "*.git*" -x "*/.git/*"
+```
+
+3. Kopieer naar de workspace zodat present_files erbij kan:
+```bash
+cp /tmp/youforce-po-toolkit.plugin "/sessions/funny-focused-volta/mnt/CLAUDE AI/youforce-po-toolkit.plugin"
+```
+> **Let op voor beheerder:** het pad `/sessions/funny-focused-volta/mnt/CLAUDE AI/` is de bash-equivalent
+> van de CLAUDE AI workspace. Dit pad kan per sessie anders zijn — gebruik `mcp__cowork__present_files`
+> met het host-pad `/Users/chris/Downloads/CLAUDE AI/youforce-po-toolkit.plugin`.
+
+### 4. Presenteer het bestand
+
+Laad `mcp__cowork__present_files` via ToolSearch en roep het aan met:
+```
+file_path: /Users/chris/Downloads/CLAUDE AI/youforce-po-toolkit.plugin
+```
+
+De gebruiker ziet een "Save plugin" knop en hoeft alleen daarop te klikken.
+
+### 5. Geef een samenvatting in de chat
+
+- Bij update: "Er is een nieuwe versie: **v{latest_version}** (huidig: v{installed_version}). Klik op 'Save plugin' hierboven om te updaten."
+- Bij up-to-date: "Je plugin is up-to-date (v{installed_version})."
+- Bij fout in WebSearch of git clone: geef de gebruiker deze link om handmatig te downloaden:
+  `https://github.com/chrisbergbi/youforce-po-toolkit/releases/latest`
 
 ---
 
 ## Notes voor beheerder (Chris)
-Bij elke nieuwe release: vervang het versienummer op regel 1 van de frontmatter én in de
-`INSTALLED`-variabele in de stappen hierboven door het nieuwe versienummer.
+Bij elke nieuwe release: vervang `0.6.0` (twee keer) door het nieuwe versienummer.
