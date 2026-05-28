@@ -7,7 +7,7 @@ description: >
 
 # Check for updates — Youforce PO Toolkit
 
-**Geïnstalleerde versie:** `0.8.0`
+**Geïnstalleerde versie:** `0.9.0`
 **GitHub repo:** `chrisbergbi/youforce-po-toolkit`
 
 ---
@@ -26,8 +26,8 @@ Extraheer uit de JSON-response:
 
 ### 2. Vergelijk versies
 
-- `installed_version` = `0.8.0`
-- Als `latest_version` == `installed_version`: zeg "Je plugin is up-to-date (v0.8.0)." Stop.
+- `installed_version` = `0.9.0`
+- Als `latest_version` == `installed_version`: zeg "Je plugin is up-to-date (v0.9.0)." Stop.
 - Als `latest_version` > `installed_version`: ga naar stap 3.
 
 ### 3. Download en presenteer
@@ -54,4 +54,4 @@ Laad daarna `mcp__cowork__present_files` via ToolSearch en presenteer:
 ---
 
 ## Notes voor beheerder (Chris)
-Bij elke nieuwe release: vervang `0.8.0` (twee keer) door het nieuwe versienummer.
+Bij elke nieuwe release: vervang `0.9.0` (twee keer) door het nieuwe versienummer.
