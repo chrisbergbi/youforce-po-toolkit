@@ -53,5 +53,6 @@ Je kunt skills aanpassen in een Cowork-sessie en Claude vragen de wijzigingen na
 
 | Versie | Datum | Wijzigingen |
 |--------|-------|-------------|
+| 0.3.0 | 2026-05-28 | Release-notes skill toegevoegd |
 | 0.2.0 | 2026-05-28 | Update-checker skill toegevoegd |
 | 0.1.0 | 2026-05-28 | Eerste versie: klantreactie en ideeën-assistent |
