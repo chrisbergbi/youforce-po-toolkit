@@ -1,0 +1,24 @@
+name: Build and release plugin
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build .plugin bestand
+        run: |
+          zip -r youforce-po-toolkit.plugin . \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "*.DS_Store"
+
+      - name: Voeg .plugin toe aan release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: youforce-po-toolkit.plugin
