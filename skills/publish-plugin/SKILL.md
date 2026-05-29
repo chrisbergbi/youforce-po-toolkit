@@ -40,7 +40,8 @@ Als de gebruiker het niet expliciet heeft gezegd, vraag dan via AskUserQuestion 
 ### 3. Haal het huidige versienummer op en stel het nieuwe in
 
 ```bash
-curl -s "https://api.github.com/repos/{owner}/{repo}/releases/latest" \
+curl -s -H "Authorization: Bearer {github_token}" \
+  "https://api.github.com/repos/{owner}/{repo}/releases/latest" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'].lstrip('v'))"
 ```
 
@@ -75,13 +76,13 @@ python3 -c "
 import json
 p = json.load(open('/tmp/po-toolkit-publish/.claude-plugin/plugin.json'))
 p['version'] = '{nieuwe_versie}'
-json.dump(p, open('/tmp/po-toolkit-publish/.claude-plugin/plugin.json','w'), indent=2)
+json.dump(p, open('/tmp/po-toolkit-publish/.claude-plugin/plugin.json','w'), indent=2, ensure_ascii=False)
 "
 sed -i 's/{huidige_versie}/{nieuwe_versie}/g' \
   /tmp/po-toolkit-publish/skills/check-for-updates/SKILL.md
 ```
 
-### 6. Commit, push en release
+### 6. Commit en push
 
 ```bash
 cd /tmp/po-toolkit-publish
@@ -90,20 +91,39 @@ git commit -m "feat: {skill-naam} bijgewerkt — v{nieuwe_versie}"
 git push https://{github_token}@github.com/{owner}/{repo}.git main
 ```
 
+### 7. Maak een GitHub release aan
+
 ```bash
-curl -s -X POST \
+RELEASE_RESPONSE=$(curl -s -X POST \
   -H "Authorization: Bearer {github_token}" \
   -H "Content-Type: application/json" \
   "https://api.github.com/repos/{owner}/{repo}/releases" \
-  -d "{\"tag_name\":\"v{nieuwe_versie}\",\"name\":\"v{nieuwe_versie} — {skill-naam} bijgewerkt\",\"body\":\"{changelog}\",\"draft\":false,\"prerelease\":false}"
+  -d "{\"tag_name\":\"v{nieuwe_versie}\",\"name\":\"v{nieuwe_versie} — {skill-naam} bijgewerkt\",\"body\":\"{changelog}\",\"draft\":false,\"prerelease\":false}")
+RELEASE_ID=$(echo "$RELEASE_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+echo "Release ID: $RELEASE_ID"
 ```
 
-### 7. Geef een samenvatting
+### 8. Bouw het .plugin bestand en upload als release asset
+
+```bash
+cd /tmp/po-toolkit-publish
+zip -r /tmp/youforce-po-toolkit.plugin .claude-plugin skills
+
+curl -s -X POST \
+  -H "Authorization: Bearer {github_token}" \
+  -H "Content-Type: application/zip" \
+  "https://uploads.github.com/repos/{owner}/{repo}/releases/$RELEASE_ID/assets?name=youforce-po-toolkit.plugin" \
+  --data-binary @/tmp/youforce-po-toolkit.plugin \
+  | python3 -c "import sys,json; r=json.load(sys.stdin); print('Asset upload:', r.get('state')); print('Download URL:', r.get('browser_download_url'))"
+```
+
+### 9. Geef een samenvatting
 
 - Skill gepubliceerd: `{skill-naam}`
 - Versie: `v{nieuwe_versie}`
 - Release URL (uit de API response)
-- "Collega's kunnen nu `check for updates` typen om de update te installeren."
+- Download URL: `https://github.com/{owner}/{repo}/releases/latest/download/youforce-po-toolkit.plugin`
+- "Collega's kunnen nu deze URL gebruiken om de plugin te installeren, of `check for updates` typen."
 
 ---
 
