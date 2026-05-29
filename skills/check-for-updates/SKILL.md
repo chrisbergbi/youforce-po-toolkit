@@ -7,7 +7,7 @@ description: >
 
 # Check for updates — Youforce PO Toolkit
 
-**Geïnstalleerde versie:** `0.12.0`
+**Geïnstalleerde versie:** `0.13.0`
 **GitHub repo:** `chrisbergbi/youforce-po-toolkit`
 
 ---
@@ -27,8 +27,8 @@ Extraheer uit de JSON-response:
 
 ### 2. Vergelijk versies
 
-- `installed_version` = `0.12.0`
-- Als `latest_version` == `installed_version`: zeg "Je plugin is up-to-date (v0.12.0)." Stop.
+- `installed_version` = `0.13.0`
+- Als `latest_version` == `installed_version`: zeg "Je plugin is up-to-date (v0.13.0)." Stop.
 - Als `latest_version` > `installed_version`: ga naar stap 3.
 
 ### 3. Download en presenteer
@@ -67,4 +67,5 @@ Klik op 'Save plugin' hierboven om te updaten.
 ---
 
 ## Notes voor beheerder (Chris)
-Bij elke nieuwe release: vervang `0.12.0` (twee keer) door het nieuwe versienummer.
+Bij elke nieuwe release: vervang `0.13.0` (twee keer) door het nieuwe versienummer.
+
