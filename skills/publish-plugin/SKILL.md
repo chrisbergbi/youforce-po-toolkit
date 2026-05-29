@@ -34,6 +34,8 @@ Als de gebruiker het niet expliciet heeft gezegd, vraag dan via AskUserQuestion 
 - `youforce-ideeen-assistent`
 - `hr-cycle-onboarding`
 - `release-notes`
+- `gmail-drafts`
+- `klant-mailing-drafts`
 - `check-for-updates`
 - `publish-plugin`
 
@@ -51,47 +53,68 @@ Vraag via AskUserQuestion om bevestiging van het versienummer én een korte chan
 ### 4. Clone de repo en kopieer de gewijzigde skill(s)
 
 ```bash
-cd /tmp && rm -rf po-toolkit-publish
-git clone https://{github_token}@github.com/{owner}/{repo}.git po-toolkit-publish
-git -C po-toolkit-publish config user.email "cb.vdbrg@gmail.com"
-git -C po-toolkit-publish config user.name "Chris van den Berg"
+cd /tmp && rm -rf toolkit-release
+git clone https://{github_token}@github.com/{owner}/{repo}.git toolkit-release
+git -C /tmp/toolkit-release config user.email "cb.vdbrg@gmail.com"
+git -C /tmp/toolkit-release config user.name "Chris van den Berg"
 ```
 
 Kopieer de gewijzigde skill vanuit de workspace:
 ```bash
 cp "{workspace_path_bash}/{skill-naam}/SKILL.md" \
-   "/tmp/po-toolkit-publish/skills/{skill-naam}/SKILL.md"
+   "/tmp/toolkit-release/skills/{skill-naam}/SKILL.md"
 ```
 
 Als er een `references/` map is:
 ```bash
 cp -r "{workspace_path_bash}/{skill-naam}/references/." \
-      "/tmp/po-toolkit-publish/skills/{skill-naam}/references/"
+      "/tmp/toolkit-release/skills/{skill-naam}/references/"
 ```
 
-### 5. Hoog het versienummer op in plugin.json en check-for-updates
+### 5. README-check — bijwerken indien relevant
+
+Lees de huidige README:
+```bash
+cat /tmp/toolkit-release/README.md
+```
+
+Beoordeel of de README bijgewerkt moet worden op basis van de wijziging:
+
+**Bijwerken als:**
+- Er is een **nieuwe skill toegevoegd** → voeg een sectie toe onder "Skills" met hetzelfde format (emoji, naam, Waarvoor, Wanneer gebruiken, Hoe triggeren, Voorbeelden) én voeg een regel toe aan de versiegeschiedenstabel
+- Een skill heeft een **nieuwe functionaliteit gekregen** → pas de beschrijving of voorbeelden aan
+- De **skill-naam of trigger-zinnen** zijn gewijzigd → pas de voorbeelden aan
+- Er is een skill **verwijderd** → verwijder de sectie
+
+**Niet bijwerken als:**
+- Alleen interne logica of prompts zijn aangepast zonder zichtbaar verschil voor de gebruiker
+- Alleen bugfixes zonder functionele wijziging
+
+Doe de README-update zelfstandig — vraag de gebruiker er niet apart om. Vermeld in de samenvatting wat je hebt bijgewerkt.
+
+### 6. Hoog het versienummer op in plugin.json en check-for-updates
 
 ```bash
 python3 -c "
 import json
-p = json.load(open('/tmp/po-toolkit-publish/.claude-plugin/plugin.json'))
+p = json.load(open('/tmp/toolkit-release/.claude-plugin/plugin.json'))
 p['version'] = '{nieuwe_versie}'
-json.dump(p, open('/tmp/po-toolkit-publish/.claude-plugin/plugin.json','w'), indent=2, ensure_ascii=False)
+json.dump(p, open('/tmp/toolkit-release/.claude-plugin/plugin.json','w'), indent=2, ensure_ascii=False)
 "
 sed -i 's/{huidige_versie}/{nieuwe_versie}/g' \
-  /tmp/po-toolkit-publish/skills/check-for-updates/SKILL.md
+  /tmp/toolkit-release/skills/check-for-updates/SKILL.md
 ```
 
-### 6. Commit en push
+### 7. Commit en push
 
 ```bash
-cd /tmp/po-toolkit-publish
+cd /tmp/toolkit-release
 git add -A
 git commit -m "feat: {skill-naam} bijgewerkt — v{nieuwe_versie}"
 git push https://{github_token}@github.com/{owner}/{repo}.git main
 ```
 
-### 7. Maak een GitHub release aan
+### 8. Maak een GitHub release aan
 
 ```bash
 RELEASE_RESPONSE=$(curl -s -X POST \
@@ -103,10 +126,10 @@ RELEASE_ID=$(echo "$RELEASE_RESPONSE" | python3 -c "import sys,json; print(json.
 echo "Release ID: $RELEASE_ID"
 ```
 
-### 8. Bouw het .plugin bestand en upload als release asset
+### 9. Bouw het .plugin bestand en upload als release asset
 
 ```bash
-cd /tmp/po-toolkit-publish
+cd /tmp/toolkit-release
 zip -r /tmp/youforce-po-toolkit.plugin .claude-plugin skills
 
 curl -s -X POST \
@@ -117,16 +140,18 @@ curl -s -X POST \
   | python3 -c "import sys,json; r=json.load(sys.stdin); print('Asset upload:', r.get('state')); print('Download URL:', r.get('browser_download_url'))"
 ```
 
-### 9. Geef een samenvatting
+### 10. Geef een samenvatting
 
 - Skill gepubliceerd: `{skill-naam}`
 - Versie: `v{nieuwe_versie}`
+- README bijgewerkt: ja/nee (en wat er is gewijzigd)
 - Release URL (uit de API response)
 - Download URL: `https://github.com/{owner}/{repo}/releases/latest/download/youforce-po-toolkit.plugin`
-- "Collega's kunnen nu deze URL gebruiken om de plugin te installeren, of `check for updates` typen."
+- "Collega's kunnen nu `check for updates` typen om de nieuwe versie te installeren."
 
 ---
 
 ## Notes voor beheerder
 - Vervang de token in `.youforce-plugin-config.json` als hij verloopt
 - Check token geldigheid: `curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer {token}" https://api.github.com/user` → moet 200 zijn
+- De clone-map heet `/tmp/toolkit-release` (niet `po-toolkit-publish`)
