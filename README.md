@@ -181,6 +181,7 @@ Sla je GitHub PAT op in `CLAUDE AI/.youforce-plugin-config.json`:
 
 | Versie | Datum | Wijzigingen |
 |--------|-------|-------------|
+| 0.12.0 | 2026-05-29 | check-for-updates toont release notes in chat; publish-plugin genereert uitgebreidere release beschrijvingen |
 | 0.11.0 | 2026-05-29 | README uitgebreid met skill-beschrijvingen per skill; publish-plugin bijgewerkt met README-check |
 | 0.10.0 | 2026-05-29 | publish-plugin uploadt nu .plugin als release asset |
 | 0.9.0 | 2026-05-28 | publish-plugin skill toegevoegd |
